@@ -171,8 +171,8 @@ void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
         }
         else len += sprintf(target + len, "%c", c);
     }                                                                         
-    if (clog_output_fd == stdout || clog_output_fd == stderr) fprintf(clog_output_fd, "%s\e[0m\n", target);
-    else fprintf(clog_output_fd, "%s\n", target);
+    if (clog_output_fd == stdout || clog_output_fd == stderr) Serial.println(target)
+    else Serial.println(target)
 }
 
 #ifndef CLOG_NO_TIME
