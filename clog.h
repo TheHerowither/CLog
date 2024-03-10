@@ -75,9 +75,9 @@ extern char *clog_time_fmt;
 
 FILE *clog_output_fd = 0;
 ClogLevel clog_muted_level = CLOG_NONE;
-const char *clog_fmt_default = "%t: %f:%l -> %c[%L]%r: %m";
+const char *clog_fmt_default = "%t: %f:%l -> [%L]: %m";
 #ifndef CLOG_NO_TIME
-    char *clog_fmt = "%t: %f:%l -> %c[%L]%r: %m";
+    char *clog_fmt = "%t: %f:%l -> [%L]: %m";
     char *clog_time_fmt = "%h:%m:%s.%u";
 #else
     char *clog_fmt = "%f:%l -> %c[%L]%r: %m";
@@ -85,7 +85,6 @@ const char *clog_fmt_default = "%t: %f:%l -> %c[%L]%r: %m";
 
 void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...);
 const char *clog_get_level_string(ClogLevel level);
-const char *clog_get_level_color(ClogLevel level);
 #ifndef CLOG_NO_TIME
 void clog_get_timestamp(char *tm);
 #else
@@ -107,20 +106,6 @@ const char *clog_get_level_string(ClogLevel level) {
     }
 }
 
-const char *clog_get_level_color(ClogLevel level) {
-    switch (level) {
-        case CLOG_DEBUG:   return "\e[32m";
-        case CLOG_TRACE:   return "\e[90m";
-        case CLOG_INFO:    return "\e[97m";
-        case CLOG_WARNING: return "\e[33m";
-        case CLOG_ERROR:   return "\e[31m";
-        case CLOG_FATAL:   return "\e[1m\e[91m";
-        default: case CLOG_NONE:{
-            clog(CLOG_WARNING, "Invalid log level supplied");
-            return "";
-        }
-    }
-}
 
 void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
     va_list args;
@@ -134,18 +119,8 @@ void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
         if (c == '%') {
         char c = clog_fmt[++i];
         switch (c) {
-            case 'c':
-                if (clog_output_fd == stdout || clog_output_fd == stderr) {
-                    len += sprintf(target + len, "%s", clog_get_level_color(level));
-                }
-                break;
             case 'L':
                 len += sprintf(target + len, "%s", clog_get_level_string(level));
-                break;
-            case 'r':
-                if (clog_output_fd == stdout || clog_output_fd == stderr) {
-                    len += sprintf(target + len, "\e[0m");
-                }
                 break;
             case 'm':
                 len += vsprintf(target + len, fmt, args);
