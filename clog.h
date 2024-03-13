@@ -73,25 +73,28 @@ extern char *clog_fmt;
 extern const char *clog_fmt_default;
 extern char *clog_time_fmt;
 
+
+void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...);
+const char * __cdecl clog_get_level_string(ClogLevel level);
+#ifndef CLOG_NO_TIME
+void __cdecl clog_get_timestamp(char *tm);
+#else
+void __cdecl clog_get_timestamp(char *tm) {(void)tm;};
+#endif
+
+
+#ifdef CLOG_IMPLEMENTATION
 FILE *clog_output_fd = 0;
 ClogLevel clog_muted_level = CLOG_NONE;
-const char *clog_fmt_default = "%t: %f:%l -> [%L]: %m";
+const char *clog_fmt_default = "%t: %f:%l -> %c[%L]%r: %m";
 #ifndef CLOG_NO_TIME
-    char *clog_fmt = "%t: %f:%l -> [%L]: %m";
+    char *clog_fmt = "%t: %f:%l -> %c[%L]%r: %m";
     char *clog_time_fmt = "%h:%m:%s.%u";
 #else
     char *clog_fmt = "%f:%l -> %c[%L]%r: %m";
 #endif
 
-void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...);
-const char *clog_get_level_string(ClogLevel level);
-#ifndef CLOG_NO_TIME
-void clog_get_timestamp(char *tm);
-#else
-void clog_get_timestamp(char *tm) {(void)tm;};
-#endif
-
-const char *clog_get_level_string(ClogLevel level) {
+const char * __cdecl clog_get_level_string(ClogLevel level) {
     switch (level) {
         case CLOG_DEBUG:   return "DEBUG";
         case CLOG_TRACE:   return "TRACE";
@@ -106,8 +109,7 @@ const char *clog_get_level_string(ClogLevel level) {
     }
 }
 
-
-void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
+void __cdecl __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -118,6 +120,7 @@ void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
         char c = clog_fmt[i];
         if (c == '%') {
         char c = clog_fmt[++i];
+        char b[50];
         switch (c) {
             case 'L':
                 len += sprintf(target + len, "%s", clog_get_level_string(level));
@@ -132,7 +135,6 @@ void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
                 len += sprintf(target + len, "%s", file);
                 break;
             case 't':
-                char b[50] = {0};
                 clog_get_timestamp(b);
                 len += sprintf(target + len, "%s", b);
                 break;
@@ -146,12 +148,11 @@ void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
         }
         else len += sprintf(target + len, "%c", c);
     }                                                                         
-    if (clog_output_fd == stdout || clog_output_fd == stderr) Serial.println(target)
-    else Serial.println(target)
+    else Serial.println(target);
 }
 
 #ifndef CLOG_NO_TIME
-void clog_get_timestamp(char *tm) {
+void __cdecl clog_get_timestamp(char *tm) {
     char buf[50] = {0};
     int hour, minute, second, millisecond;
     #ifdef _WIN32
@@ -201,4 +202,5 @@ void clog_get_timestamp(char *tm) {
     strncpy(tm, buf, strlen(buf));
 }
 #endif //CLOG_NO_TIME
+#endif //CLOG_IMPLEMENTATION
 #endif //_CLOG_H
