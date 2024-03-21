@@ -58,11 +58,11 @@ typedef enum {
 
 #define CLOG_INIT clog_output_fd = stdout
 
-#define clog_mute_level(lvl) clog_muted_level = lvl
-#define clog_set_output(output_fd) clog_output_fd = output_fd
-#define clog_set_fmt(fmt) clog_fmt = fmt
+#define clog_mute_level(lvl) clog_muted_level = (char*)lvl
+#define clog_set_output(output_fd) clog_output_fd =(char*) output_fd
+#define clog_set_fmt(fmt) clog_fmt = (char*)fmt
 #ifndef CLOG_NO_TIME
-#define clog_set_time_fmt(fmt) clog_time_fmt = fmt
+#define clog_set_time_fmt(fmt) clog_time_fmt = (char*)fmt
 #endif
 
 #define clog(level, ...) if (level >= clog_muted_level) __clog(level, __FILE__, __LINE__, __VA_ARGS__)
@@ -76,6 +76,7 @@ extern char *clog_time_fmt;
 
 void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...);
 const char * __cdecl clog_get_level_string(ClogLevel level);
+const char * __cdecl clog_get_level_color(ClogLevel level);
 #ifndef CLOG_NO_TIME
 void __cdecl clog_get_timestamp(char *tm);
 #else
@@ -86,12 +87,12 @@ void __cdecl clog_get_timestamp(char *tm) {(void)tm;};
 #ifdef CLOG_IMPLEMENTATION
 FILE *clog_output_fd = 0;
 ClogLevel clog_muted_level = CLOG_NONE;
-const char *clog_fmt_default = "%t: %f:%l -> %c[%L]%r: %m";
+const char *clog_fmt_default = "%t: %f:%l -> [%L]: %m";
 #ifndef CLOG_NO_TIME
-    char *clog_fmt = "%t: %f:%l -> %c[%L]%r: %m";
-    char *clog_time_fmt = "%h:%m:%s.%u";
+    char *clog_fmt = (char*)"%t: %f:%l -> [%L]: %m";
+    char *clog_time_fmt = (char*)"%h:%m:%s.%u";
 #else
-    char *clog_fmt = "%f:%l -> %c[%L]%r: %m";
+    char *clog_fmt = (char*)"%f:%l -> [%L]: %m";
 #endif
 
 const char * __cdecl clog_get_level_string(ClogLevel level) {
@@ -148,7 +149,7 @@ void __cdecl __clog(ClogLevel level, const char *file, int line, const char *fmt
         }
         else len += sprintf(target + len, "%c", c);
     }                                                                         
-    else Serial.println(target);
+    Serial.println(clog_output_fd, "%s\n", target);
 }
 
 #ifndef CLOG_NO_TIME
