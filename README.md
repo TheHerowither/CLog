@@ -1,6 +1,8 @@
 # CLog
 CLog is a simple STB-style header-only logging library for C and C++.
 
+**THIS IS THE ARDUINO COMPATABLE BRANCH**
+
 ## Features:
  - Six logging levels 
     - DEBUG 
@@ -15,13 +17,9 @@ CLog is a simple STB-style header-only logging library for C and C++.
  - Logging to an arbitrary file descriptor
  - C99 Compatable
  - Logging file info
- - Timestamps
 
 ## Todo Features
- - Removing CLOG_INIT (Hopefully)
- - Timestamps for other OS's
-    - Linux
-    - MacOS
+ - Function for getting log string
 
 # Usage
 CLog uses a basic macro for logging, and an enum for the different levels of logging
@@ -29,8 +27,8 @@ CLog uses a basic macro for logging, and an enum for the different levels of log
 #define CLOG_IMPLEMENTATION
 #include <clog.h>
 
-int main(void) {
-    CLOG_INIT;
+void setup() {
+    Serial.beigin(9600);
 
     clog(CLOG_DEBUG,   "Hello from CLog!");
     clog(CLOG_TRACE,   "Hello from CLog!");
@@ -39,33 +37,16 @@ int main(void) {
     clog(CLOG_ERROR,   "Hello from CLog!");
     clog(CLOG_FATAL,   "Hello from CLog!");
 }
+
+void loop() {
+    // ...
+}
 ```
 
 ## Muting log levels
 If you add this simple line to the demo, any message with the level CLOG_DEBUG or CLOG_TRACE will not show
 ```C 
 clog_mute_level(CLOG_INFO);
-```
-
-## Changing log output
-
-This example will log "Hello, World" into a file called "log.log"
-
-Clog does not handle any kind of files, all it needs is a file descriptor.
-
-```C
-#include <stdio.h>
-
-#define CLOG_IMPLEMENTATION
-#include <clog.h>
-
-int main(void) {
-    FILE *f = open("log.log");
-    
-    clog_set_output(f);
-    clog(CLOG_INFO, "Hello, World");
-    fclose(f);
-}
 ```
 
 ## Formatting
