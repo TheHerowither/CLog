@@ -56,10 +56,8 @@ typedef enum {
 } ClogLevel;
 
 
-#define CLOG_INIT clog_output_fd = stdout
 
 #define clog_mute_level(lvl) clog_muted_level = (char*)lvl
-#define clog_set_output(output_fd) clog_output_fd =(char*) output_fd
 #define clog_set_fmt(fmt) clog_fmt = (char*)fmt
 #ifndef CLOG_NO_TIME
 #define clog_set_time_fmt(fmt) clog_time_fmt = (char*)fmt
@@ -68,19 +66,18 @@ typedef enum {
 #define clog(level, ...) if (level >= clog_muted_level) __clog(level, __FILE__, __LINE__, __VA_ARGS__)
 
 extern ClogLevel clog_muted_level;
-extern FILE *clog_output_fd;
 extern char *clog_fmt;
 extern const char *clog_fmt_default;
 extern char *clog_time_fmt;
 
 
 void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...);
-const char * __cdecl clog_get_level_string(ClogLevel level);
-const char * __cdecl clog_get_level_color(ClogLevel level);
+const char * clog_get_level_string(ClogLevel level);
+const char * clog_get_level_color(ClogLevel level);
 #ifndef CLOG_NO_TIME
-void __cdecl clog_get_timestamp(char *tm);
+void clog_get_timestamp(char *tm);
 #else
-void __cdecl clog_get_timestamp(char *tm) {(void)tm;};
+void clog_get_timestamp(char *tm) {(void)tm;};
 #endif
 
 
@@ -95,7 +92,7 @@ const char *clog_fmt_default = "%t: %f:%l -> [%L]: %m";
     char *clog_fmt = (char*)"%f:%l -> [%L]: %m";
 #endif
 
-const char * __cdecl clog_get_level_string(ClogLevel level) {
+const char * clog_get_level_string(ClogLevel level) {
     switch (level) {
         case CLOG_DEBUG:   return "DEBUG";
         case CLOG_TRACE:   return "TRACE";
@@ -110,7 +107,7 @@ const char * __cdecl clog_get_level_string(ClogLevel level) {
     }
 }
 
-void __cdecl __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
+void __clog(ClogLevel level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -149,11 +146,11 @@ void __cdecl __clog(ClogLevel level, const char *file, int line, const char *fmt
         }
         else len += sprintf(target + len, "%c", c);
     }                                                                         
-    Serial.println(clog_output_fd, "%s\n", target);
+    Serial.println(target);
 }
 
 #ifndef CLOG_NO_TIME
-void __cdecl clog_get_timestamp(char *tm) {
+void clog_get_timestamp(char *tm) {
     char buf[50] = {0};
     int hour, minute, second, millisecond;
     #ifdef _WIN32
