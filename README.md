@@ -160,7 +160,7 @@ CLog has a internal function pointer (`clog_callback`) which is the function tha
 int clog_callback(const char *line);
 ```
 
-> [!NOTE]
+> [!WARNING]
 > If the callback returns a non-zero value it reverts to the default callback!
 
 ## Custom log levels
