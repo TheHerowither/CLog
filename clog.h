@@ -151,8 +151,10 @@ extern CLOG_THREAD_LOCAL char *clog_fmt;
 extern CLOG_THREAD_LOCAL char *clog_time_fmt;
 extern const char *clog_fmt_default;
 extern int clog_muted_level;
+extern int(*clog_callback)(const char *line);
 
 void __clog(clog_level_t level, const char *file, int line, const char *func, const char *fmt, ...);
+int clog_default_callback(const char *line);
 #ifndef CLOG_NO_TIME
 char *clog_get_timestamp();
 #else
@@ -189,6 +191,8 @@ int clog_muted_level = -1;
 int __clog_errno = 0;
 char __clog_timebuf[50];
 
+int(*clog_callback)(const char *line) = clog_default_callback;
+
 CLOG_THREAD_LOCAL FILE *clog_output_fd = 0;
 #ifndef CLOG_NO_TIME
     const char *clog_fmt_default = "%t: %f:%l (%F()) -> %c[%L]%r: %m";
@@ -198,6 +202,12 @@ CLOG_THREAD_LOCAL FILE *clog_output_fd = 0;
     const char *clog_fmt_default = (char*)"%f:%l (%F()) -> %c[%L]%r: %m";
     CLOG_THREAD_LOCAL char *clog_fmt = (char*)"%f:%l (%F()) -> %c[%L]%r: %m";
 #endif
+
+int clog_default_callback(const char *line) {
+    if (clog_output_fd == stdout || clog_output_fd == stderr) fprintf(clog_output_fd, "%s%s\n", line, CLOG_COLOR_RESET);
+    else fprintf(clog_output_fd, "%s\n", line);
+    return 0;
+}
 
 size_t __clog_buffer_size(const char *fmt, va_list args) {
     int res = vsnprintf(NULL, 0, fmt, args);
@@ -296,9 +306,10 @@ void __clog(clog_level_t level, const char *file, int line, const char *func, co
         }
     }
     va_end(args);
-
-    if (clog_output_fd == stdout || clog_output_fd == stderr) fprintf(clog_output_fd, "%s%s\n", target, CLOG_COLOR_RESET);
-    else fprintf(clog_output_fd, "%s\n", target);
+    int res = clog_callback(target);
+    if (res) {
+        clog_default_callback(target);
+    }
 }
 
 
